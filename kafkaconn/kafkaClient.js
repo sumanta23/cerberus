@@ -57,6 +57,10 @@ module.exports.createConsumerGroup = function (topic, pushToES) {
     const options = {
         kafkaHost: config.get("kafka.kafkaHosts"),
         groupId: config.get("kafka.consumergrpname"),
+        autoCommit: false,
+        fetchMaxWaitMs: 1000,
+        fetchMaxBytes: 1024 * 1024,
+        fromOffset: "earliest"
     };
     var consumerGroup = new ConsumerGroup(options, topic);
 
@@ -73,7 +77,11 @@ module.exports.createConsumerGroup = function (topic, pushToES) {
             message.offset
         );
         var payload = JSON.parse(message.value);
-        return pushToES({index: message.topic, id: payload.id|| uuidv4(), body:payload.data});
+        return pushToES({index: message.topic, id: payload.id|| uuidv4(), body:payload.data}).then(()=>{
+            return consumerGroup.commit(true,()=>{});
+        }).catch((err)=>{
+            console.log("ccccc", err)
+        })
     });
     return consumerGroup;
 }

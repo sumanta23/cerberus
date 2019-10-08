@@ -1,5 +1,6 @@
 var config = require("config-wrapper");
 var redisconnection = require("redisconnection-wrapper")(config.get("redis"));
+var sub = require("redisconnection-wrapper")(config.get("redis"));
 
 var boot = require("boot-wrapper");
 
@@ -11,7 +12,13 @@ var dbname = process.env.NODE_ENV === 'test' ? "test" : undefined;
 var modelPath= "./db/models";
 var schemaPath= "./db/schemas";
 
-
+sub.subscribe("newtopic", function(err,count) {
+  console.log("count -> ", count);
+});
+sub.on('message', function(channel, message){
+  debug("message from redis %s -> %s",channel, message );
+  attachToCG(message);
+});
 
 var kafka = require('kafka-node');
 var async = require('async');
@@ -42,6 +49,14 @@ boot.init(config)
     });
   });
 });
+
+function attachToCG(topicName){
+  var kafkaClient = require("./kafkaconn/kafkaClient.js");
+  var {pushToES} = require("./es/index.js");
+  console.log("attaching consumer for topic", topicname)
+  let cg = kafkaClient.createConsumerGroup(topicName, pushToES);
+  consumerGroups.push(cg);
+}
 
 process.once('SIGINT', function () {
   async.each(consumerGroups, function (consumer, callback) {

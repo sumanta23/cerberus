@@ -10,12 +10,12 @@ const client =  new Client({
 });
 
 
-const pushToES = (data)=> {
-  client.index({
-      index: data.index,
-      id: data.id,
-      body: data.body
-   });
+const pushToES = (data) => {
+  return client.index({
+    index: data.index,
+    id: data.id,
+    body: data.body
+  });
 }
 
 module.exports = { client , pushToES};
