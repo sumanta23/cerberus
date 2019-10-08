@@ -1,0 +1,8 @@
+{
+    "PREFIX": "http://",
+    "HOST": "localhost",
+    "PORT": "9200",
+    "RETRY": 5,
+    "REQUEST_TIMEOUT": 60000,
+    "SNIFF": true
+  }

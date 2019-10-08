@@ -1,0 +1,12 @@
+{
+    "kafkaHosts": {
+        "doc": "kafka hostname",
+        "default": "127.0.0.1:9092",
+        "env" : "KAFKA_HOSTS"
+    },
+
+    "consumergrpname" :{
+        "doc": "kafka consumer group name",
+        "default": "abloadercg"
+    }
+}
