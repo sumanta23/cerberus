@@ -1,0 +1,259 @@
+##################################################################################################
+# configmap
+##################################################################################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes 3;
+
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+
+    events {
+      worker_connections 10240;
+    }
+
+    http {
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+
+      # realip
+      real_ip_header X-Forwarded-For;
+      real_ip_recursive on;
+      set_real_ip_from 127.0.0.1;
+
+      # base settings
+      proxy_http_version 1.1;
+      proxy_connect_timeout 40s;
+      proxy_buffers 8 8k;
+      proxy_set_header Connection "";
+      proxy_set_header Host $http_host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_pass_header Server;
+      proxy_hide_header X-Route;
+      proxy_set_header  x-must-collect 1;
+      server_tokens      off; #disable sending nginx version
+
+      # Gzip Settings
+      #gzip response
+      gzip             on;
+      gzip_vary        on;
+      #gzip proxied responses
+      gzip_proxied     any;
+      gzip_min_length  1400;
+      gzip_comp_level  5;
+      #gzip_types       *;
+      gzip_types
+          application/javascript
+          application/json
+          application/vnd.ms-fontobject
+          application/x-font-ttf
+          application/xhtml+xml
+          application/xml
+          font/opentype
+          image/x-icon
+          text/css
+          text/plain
+          text/x-component;
+
+      #TODO: watch large_client_header_buffers for memory issues
+      large_client_header_buffers 4 64k;
+
+      client_max_body_size 6M;
+
+      #cache open file descriptors
+      # http://nginx.org/en/docs/http/ngx_http_core_module.html#open_file_cache
+      open_file_cache          max=1000 inactive=20s;
+      open_file_cache_valid    30s;
+      open_file_cache_min_uses 2;
+      open_file_cache_errors   on;
+      
+      log_format logjson '{ "@timestamp": "$time_iso8601", '
+                         '"msec": $msec, '
+                         '"remote_addr": "$remote_addr", '
+                         '"x_forwarded_for": "$proxy_add_x_forwarded_for", '
+                         '"remote_port": "$remote_port", '
+                         '"pipelined": "$pipe", '
+                         '"body_bytes_sent": "$body_bytes_sent", '
+                         '"bytes_sent": $bytes_sent, '
+                         '"request_time": $request_time, '
+                         '"upstream_response_time": "$upstream_response_time", '
+                         '"upstream_response_length": "$upstream_response_length", '
+                         '"upstream_status": "$upstream_status", '
+                         '"route": "$upstream_http_x_route", '
+                         '"server": "$upstream_http_server", '
+                         '"host": "$host", '
+                         '"hostname": "$hostname", '
+                         '"server_name": "$server_name", '
+                         '"request_completion": "$request_completion", '
+                         '"status": $status, '
+                         '"connection_requests": $connection_requests, '
+                         '"request_uri": "$request_uri", '
+                         '"request_method": "$request_method", '
+                         '"request_content_type": "$content_type", '
+                         '"request_content_length": "$content_length", '
+                         '"request_total_length": $request_length, '
+                         '"args": "$args",'
+                         '"is_args": "$is_args", '
+                         '"x-traceid":"$upstream_http_x_traceid", '
+                         '"http_user_agent": "$http_user_agent" }';
+
+      access_log syslog:server=localhost:5141 logjson;
+      error_log syslog:server=localhost:5141;
+
+      sendfile on;
+
+      keepalive_timeout 65;
+      upstream api {
+        server cerberosapi:5000;
+        keepalive 32;
+      }
+      upstream ws {
+        server cerberossocket:5555;
+        keepalive 32;
+      }
+
+      server {
+
+        listen 80 default_server;
+        server_name _;
+
+        add_header X-Response-Time "$request_time";
+        add_header X-Request-Start "$msec";
+
+        #prevent access to hidden files
+        location ~* (?:^|/)\. {
+          deny all;
+        }
+
+        location /ws {
+          proxy_pass http://ws;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location / {
+          proxy_pass http://api;
+          add_header Cache-Control 'no-cache';
+          add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;" always;
+          proxy_set_header Connection "";
+          proxy_set_header Host $http_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_pass_header Server;
+          proxy_hide_header X-Route;
+          proxy_set_header  x-must-collect 1;
+        }
+
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-conf
+data:
+  deployment.conf: | 
+    {
+      "ws":{
+          "wsProtocol":"wss"
+      },
+      "db":{
+          "database": "cerberosdb",
+          "host": "mongo"
+      },
+      "kafka":{
+          "kafkaHosts" : "bootstrap.kafka:9092"
+      }
+    }
+---
+##################################################################################################
+# redis service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+    service: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    name: redis
+  selector:
+    app: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+    version: v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+        version: v1
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6379
+---
+##################################################################################################
+# mongo service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+    service: mongo
+spec:
+  ports:
+  - port: 27017
+    name: mongo
+  selector:
+    app: mongo
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mongo
+  labels:
+    app: mongo
+    version: v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mongo
+        version: v1
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27017
+---

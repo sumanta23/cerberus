@@ -1,0 +1,251 @@
+##################################################################################################
+# api service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: cerberosapi
+  labels:
+    app: cerberosapi
+    service: cerberosapi
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: cerberosapi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cerberosapi
+  labels:
+    app: cerberosapi
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: cerberosapi
+        version: v1
+    spec:
+      containers:
+      - name: cerberosapi
+        image: sumanta23/cerberos:latest
+        args:
+          - node
+          - index.js
+        imagePullPolicy: Always
+        env:
+          - name: REDIS_HOST
+            value: "redis"
+          - name: DEBUG
+            value: "*"
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: /usr/src/config/deployment.json
+          readOnly: true
+          name: deployment-conf
+          subPath: deployment.conf
+      - name: logger-agent
+        image: sumanta23/fluentd:tagname
+        env:
+        - name: FLUENTD_ARGS
+          value: -c /fluentd/etc/fluent.conf
+        volumeMounts:
+        - name: config-volume
+          mountPath: /fluentd/etc
+      volumes:
+      - name: deployment-conf
+        configMap:
+          name: deployment-conf
+          items:
+            - key: deployment.conf
+              path: deployment.conf
+---
+##################################################################################################
+# socket service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: cerberossocket
+  labels:
+    app: cerberossocket
+    service: cerberossocket
+spec:
+  ports:
+  - port: 5555
+    name: http
+  selector:
+    app: cerberossocket
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cerberossocket
+  labels:
+    app: cerberossocket
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: cerberossocket
+        version: v1
+    spec:
+      containers:
+      - name: cerberossocket
+        image: 157960520452.dkr.ecr.ap-south-1.amazonaws.com/cerberos-sumanta:server
+        args:
+          - node
+          - socket.js
+        imagePullPolicy: Always
+        env:
+          - name: REDIS_HOST
+            value: "redis"
+          - name: DEBUG
+            value: "*"
+        ports:
+        - containerPort: 5555
+        volumeMounts:
+        - mountPath: /usr/src/config/deployment.json
+          readOnly: true
+          name: deployment-conf
+          subPath: deployment.conf
+      volumes:
+      - name: deployment-conf
+        configMap:
+          name: deployment-conf
+          items:
+            - key: deployment.conf
+              path: deployment.conf
+---
+##################################################################################################
+# job service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: cerberosjob
+  labels:
+    app: cerberosjob
+    service: cerberosjob
+spec:
+  ports:
+  - port: 5000
+    name: http
+  selector:
+    app: cerberosjob
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cerberosjob
+  labels:
+    app: cerberosjob
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: cerberosjob
+        version: v1
+    spec:
+      containers:
+      - name: cerberosjob
+        image: 157960520452.dkr.ecr.ap-south-1.amazonaws.com/cerberos-sumanta:server
+        args:
+          - node
+          - jobserver.js
+        imagePullPolicy: Always
+        env:
+          - name: REDIS_HOST
+            value: "redis"
+          - name: ELASTIC_URL
+            value: "http://elastic:9200"
+          - name: DEBUG
+            value: "*"
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - mountPath: /usr/src/config/deployment.json
+          readOnly: true
+          name: deployment-conf
+          subPath: deployment.conf
+      volumes:
+      - name: deployment-conf
+        configMap:
+          name: deployment-conf
+          items:
+            - key: deployment.conf
+              path: deployment.conf
+---
+##################################################################################################
+# cerberosnginx service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: cerberosnginx
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: cerberosnginx
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: cerberosnginx
+  labels:
+    app: cerberosnginx
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: cerberosnginx
+        version: v1
+    spec:
+      containers:
+      - name: cerberosnginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /etc/nginx/nginx.conf # mount nginx-conf volumn to /etc/nginx
+          readOnly: true
+          name: nginx-conf
+          subPath: nginx.conf
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf # place ConfigMap `nginx-conf` on /etc/nginx
