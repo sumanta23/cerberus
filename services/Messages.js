@@ -17,6 +17,7 @@ MessageService.prototype.consumeMessage = function(topicId, payload) {
     return tDbModels.find({_id: topicId}).then((topic)=>{
         if(_.size(topic)==1){
             payload.topic = topic[0].tenantName+""+topic[0].name;
+            debug(">>>>>",topic[0], payload);
             return kafkaClient.produceMessage(payload, topic[0]);
         }
         else{

@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^7.4.0",
-    "@sumanta23/server-wrapper": "^1.0.7",
+    "@sumanta23/server-wrapper": "^1.0.9",
     "applogger-wrapper": "^1.0.0",
     "boot-wrapper": "^1.0.1",
     "config-wrapper": "^1.0.3",
