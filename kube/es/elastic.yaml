@@ -1,11 +1,48 @@
-apiVersion: apps/v1beta1
-kind: Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-discovery
+  labels:
+    component: elasticsearch
+    role: master
+spec:
+  selector:
+    component: elasticsearch
+    role: master
+  ports:
+  - name: transport
+    port: 9300
+    protocol: TCP
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels:
+    component: elasticsearch
+    role: data
+spec:
+  selector:
+    component: elasticsearch
+    role: data
+  ports:
+  - name: http
+    port: 9200
+---
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: es-master
   labels:
     component: elasticsearch
     role: master
 spec:
+  selector:
+    matchLabels:
+      component: elasticsearch
+      role: master
+  serviceName: elasticsearch-master
   replicas: 3
   template:
     metadata:
@@ -13,18 +50,6 @@ spec:
         component: elasticsearch
         role: master
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: role
-                  operator: In
-                  values:
-                  - master
-              topologyKey: kubernetes.io/hostname
       initContainers:
       - name: init-sysctl
         image: busybox:1.27.2
@@ -36,7 +61,7 @@ spec:
           privileged: true
       containers:
       - name: es-master
-        image: quay.io/pires/docker-elasticsearch-kubernetes:6.2.4
+        image: quay.io/pires/docker-elasticsearch-kubernetes:6.3.0
         env:
         - name: NAMESPACE
           valueFrom:
@@ -47,7 +72,7 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: CLUSTER_NAME
-          value: my-es
+          value: myesdb
         - name: NUMBER_OF_MASTERS
           value: "2"
         - name: NODE_MASTER
@@ -65,41 +90,48 @@ spec:
             resourceFieldRef:
               resource: limits.cpu
         resources:
+          requests:
+            cpu: 0.25
           limits:
-            cpu: .5
+            cpu: 1
         ports:
         - containerPort: 9300
           name: transport
-        - containerPort: 9200
-          name: http
+        livenessProbe:
+          tcpSocket:
+            port: transport
+          initialDelaySeconds: 20
+          periodSeconds: 10
         volumeMounts:
         - name: storage
           mountPath: /data
-      volumes:
-          - emptyDir:
-              medium: ""
-            name: "storage"
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+    spec:
+      storageClassName: fast
+      accessModes: [ ReadWriteOnce ]
+      resources:
+        requests:
+          storage: 2Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: elasticsearch-discovery
+  name: elasticsearch-master
   labels:
     component: elasticsearch
     role: master
 spec:
+  ports:
+  - port: 9300
+    name: transport
+  clusterIP: None
   selector:
     component: elasticsearch
     role: master
-  ports:
-  - name: transport
-    port: 9300
-    protocol: TCP
-  - name: http
-    port: 9200
-    protocol: TCP
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: es-data
@@ -107,6 +139,10 @@ metadata:
     component: elasticsearch
     role: data
 spec:
+  selector:
+    matchLabels:
+      component: elasticsearch
+      role: data
   serviceName: elasticsearch-data
   replicas: 3
   template:
@@ -115,18 +151,6 @@ spec:
         component: elasticsearch
         role: data
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: role
-                  operator: In
-                  values:
-                  - data
-              topologyKey: kubernetes.io/hostname
       initContainers:
       - name: init-sysctl
         image: busybox:1.27.2
@@ -138,7 +162,7 @@ spec:
           privileged: true
       containers:
       - name: es-data
-        image: quay.io/pires/docker-elasticsearch-kubernetes:6.2.4
+        image: quay.io/pires/docker-elasticsearch-kubernetes:6.3.2
         env:
         - name: NAMESPACE
           valueFrom:
@@ -149,13 +173,13 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: CLUSTER_NAME
-          value: my-es
+          value: myesdb
         - name: NODE_MASTER
           value: "false"
         - name: NODE_INGEST
           value: "false"
         - name: HTTP_ENABLE
-          value: "false"
+          value: "true"
         - name: ES_JAVA_OPTS
           value: -Xms256m -Xmx256m
         - name: PROCESSORS
@@ -163,25 +187,38 @@ spec:
             resourceFieldRef:
               resource: limits.cpu
         resources:
+          requests:
+            cpu: 0.25
           limits:
-            cpu: .5
+            cpu: 1
         ports:
+        - containerPort: 9200
+          name: http
         - containerPort: 9300
           name: transport
+        livenessProbe:
+          tcpSocket:
+            port: transport
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: http
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
         volumeMounts:
         - name: storage
           mountPath: /data
   volumeClaimTemplates:
   - metadata:
       name: storage
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "fast"
     spec:
-      accessModes: [ "ReadWriteOnce" ]
       storageClassName: fast
+      accessModes: [ ReadWriteOnce ]
       resources:
         requests:
-          storage: 10Gi
+          storage: 12Gi
 ---
 apiVersion: v1
 kind: Service
