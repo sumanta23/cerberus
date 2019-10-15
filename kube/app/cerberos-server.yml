@@ -54,14 +54,6 @@ spec:
           readOnly: true
           name: deployment-conf
           subPath: deployment.conf
-      - name: logger-agent
-        image: sumanta23/fluentd:tagname
-        env:
-        - name: FLUENTD_ARGS
-          value: -c /fluentd/etc/fluent.conf
-        volumeMounts:
-        - name: config-volume
-          mountPath: /fluentd/etc
       volumes:
       - name: deployment-conf
         configMap:
@@ -109,7 +101,7 @@ spec:
     spec:
       containers:
       - name: cerberossocket
-        image: 157960520452.dkr.ecr.ap-south-1.amazonaws.com/cerberos-sumanta:server
+        image: sumanta23/cerberos:latest
         args:
           - node
           - socket.js
@@ -173,16 +165,16 @@ spec:
     spec:
       containers:
       - name: cerberosjob
-        image: 157960520452.dkr.ecr.ap-south-1.amazonaws.com/cerberos-sumanta:server
+        image: sumanta23/cerberos:latest
         args:
           - node
-          - jobserver.js
+          - consumer.js
         imagePullPolicy: Always
         env:
           - name: REDIS_HOST
             value: "redis"
           - name: ELASTIC_URL
-            value: "http://elastic:9200"
+            value: "http://elasticsearch.esspace:9200"
           - name: DEBUG
             value: "*"
         ports:
@@ -208,10 +200,11 @@ kind: Service
 metadata:
   name: cerberosnginx
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     targetPort: 80
+    nodePort: 32235
   selector:
     app: cerberosnginx
 ---
