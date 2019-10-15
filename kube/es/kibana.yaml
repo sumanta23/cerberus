@@ -13,36 +13,17 @@ spec:
     spec:
       containers:
       - name: kibana
-        image: sumanta23/kibanalogger:latest
+        image: docker.elastic.co/kibana/kibana:6.3.2
         env:
         - name: ELASTICSEARCH_URL
           value: http://elasticsearch:9200
         - name: XPACK_SECURITY_ENABLED
           value: "true"
-        - name: ELASTICSEARCH_USERNAME
-          value: elastic
-        - name: ELASTICSEARCH_PASSWORD
-          value: supersecret
-        - name: SERVER_BASEPATH
-          value: /kibana
-        - name: SERVER_REWRITEBASEPATH
-          value: "true"
         ports:
         - containerPort: 5601
           name: http
           protocol: TCP
-        volumeMounts:
-        - mountPath: /usr/share/kibana/plugins/logtrail/logtrail.json
-          readOnly: true
-          name: logtrail-config
-          subPath: logtrail.json
-      volumes:
-      - name: logtrail-config
-        configMap:
-          name: logtrail-config
-          items:
-            - key: logtrail.json
-              path: logtrail.json
+        imagePullPolicy: IfNotPresent
 
 ---
 
