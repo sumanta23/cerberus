@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  selector:
+    matchLabels:
+      run: kibana
+  template:
+    metadata:
+      labels:
+        run: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: sumanta23/kibanalogger:latest
+        env:
+        - name: ELASTICSEARCH_URL
+          value: http://elasticsearch:9200
+        - name: XPACK_SECURITY_ENABLED
+          value: "true"
+        - name: ELASTICSEARCH_USERNAME
+          value: elastic
+        - name: ELASTICSEARCH_PASSWORD
+          value: supersecret
+        - name: SERVER_BASEPATH
+          value: /kibana
+        - name: SERVER_REWRITEBASEPATH
+          value: "true"
+        ports:
+        - containerPort: 5601
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /usr/share/kibana/plugins/logtrail/logtrail.json
+          readOnly: true
+          name: logtrail-config
+          subPath: logtrail.json
+      volumes:
+      - name: logtrail-config
+        configMap:
+          name: logtrail-config
+          items:
+            - key: logtrail.json
+              path: logtrail.json
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  labels:
+    service: kibana
+spec:
+  type: NodePort
+  selector:
+    run: kibana
+  ports:
+  - port: 5601
+    targetPort: 5601
