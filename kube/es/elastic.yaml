@@ -66,10 +66,12 @@ spec:
               resource: limits.cpu
         resources:
           limits:
-            cpu: 1
+            cpu: .5
         ports:
         - containerPort: 9300
           name: transport
+        - containerPort: 9200
+          name: http
         volumeMounts:
         - name: storage
           mountPath: /data
@@ -93,7 +95,9 @@ spec:
   - name: transport
     port: 9300
     protocol: TCP
-  clusterIP: None
+  - name: http
+    port: 9200
+    protocol: TCP
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
@@ -160,7 +164,7 @@ spec:
               resource: limits.cpu
         resources:
           limits:
-            cpu: 1
+            cpu: .5
         ports:
         - containerPort: 9300
           name: transport
