@@ -41,7 +41,7 @@ spec:
         args:
           - node
           - index.js
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: REDIS_HOST
             value: "redis"
@@ -105,7 +105,7 @@ spec:
         args:
           - node
           - socket.js
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: REDIS_HOST
             value: "redis"
@@ -169,7 +169,7 @@ spec:
         args:
           - node
           - consumer.js
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
           - name: REDIS_HOST
             value: "redis"
