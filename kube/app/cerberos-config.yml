@@ -235,6 +235,18 @@ spec:
   selector:
     app: mongo
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongo-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: fast
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -256,4 +268,10 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 27017
----
+        volumeMounts:
+        - name: "mongo-data"
+          mountPath: "/data/db"
+      volumes:
+      - name: mongo-data
+        persistentVolumeClaim:
+          claimName: mongo-data

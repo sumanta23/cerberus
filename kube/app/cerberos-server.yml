@@ -231,6 +231,7 @@ spec:
       containers:
       - name: cerberosnginx
         image: nginx
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
         volumeMounts:
