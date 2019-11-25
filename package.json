@@ -10,10 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^7.4.0",
-    "@sumanta23/server-wrapper": "^1.0.9",
+    "@sumanta23/server-wrapper": "^1.1.1",
     "applogger-wrapper": "^1.0.0",
     "boot-wrapper": "^1.0.1",
-    "config-wrapper": "^1.0.4",
+    "config-wrapper": "^1.0.5",
     "cors": "^2.8.5",
     "kafka-node": "^4.1.3",
     "mongodbconnection-wrapper": "^1.0.1",
