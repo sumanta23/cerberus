@@ -1,6 +1,6 @@
-var paramType          = require("@sumanta23/server-wrapper").paramTypes;
-var serviceHandler     = require("@sumanta23/server-wrapper").serviceHandler;
-let BaseRest           = require("@sumanta23/server-wrapper").BaseRest;
+var paramType          = require("common-wrapper").paramTypes;
+var serviceHandler     = require("common-wrapper").serviceHandler;
+let BaseRest           = require("common-wrapper").BaseRest;
 
 var Promise            = require('bluebird');
 var _                  = require('lodash');

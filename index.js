@@ -42,7 +42,7 @@ boot.init(config)
 		await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
 			.then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
 	}).then(async ()=>{
-		var api = new APIServer(app, 5000, { restPath, schemaPath: validationSchema, validationRequired, apidocRequired, basicSecRequired, xssIgnoreList, baseURL, apiPrefix:"", PEPRequired:true, pepFunction:pepFunction, tracing:true, instrumenatation: tracer })
+		var api = new APIServer(app, 5000, { restPath, schemaPath: validationSchema, validationRequired, apidocRequired, basicSecRequired, xssIgnoreList, baseURL, apiPrefix:"", PEPRequired:true, pepFunction:pepFunction, tracing:true, instrumentations: tracer })
 		api.init()
 		api.loadapi();
 		api.start();

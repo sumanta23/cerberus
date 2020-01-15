@@ -2,7 +2,7 @@
 var debug       = require('debug')("MessageService: ");
 var Promise     = require('bluebird');
 var _           = require('lodash');
-var BaseService = require("@sumanta23/server-wrapper").BaseService;
+var BaseService = require("common-wrapper").BaseService;
 var errors      = require("perror-wrapper");
 var kafkaClient = require("../kafkaconn/kafkaClient.js");
 
@@ -13,7 +13,6 @@ var topicsModelName = 'topics';
 class MessageService extends BaseService {
 	constructor(context) {
 		super(context);
-		this.context = context;
 	}
 
 

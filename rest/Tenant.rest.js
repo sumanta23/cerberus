@@ -1,13 +1,14 @@
-var paramType          = require("@sumanta23/server-wrapper").paramTypes;
-var serviceHandler     = require("@sumanta23/server-wrapper").serviceHandler;
+var paramType          = require("common-wrapper").paramTypes;
+var serviceHandler     = require("common-wrapper").serviceHandler;
 
 var Promise            = require('bluebird');
 var _                  = require('lodash');
-
+let BaseRest           = require("common-wrapper").BaseRest;
 var TenantService      = require("../services/Tenant.js");
 
-class Tenants {
+class Tenants extends BaseRest {
 	constructor(url_prefix="/api"){
+		super();
 		this.url_prefix = url_prefix;
 	}
 

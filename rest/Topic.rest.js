@@ -1,27 +1,28 @@
-var paramType          = require("@sumanta23/server-wrapper").paramTypes;
-var serviceHandler     = require("@sumanta23/server-wrapper").serviceHandler;
+var paramType          = require("common-wrapper").paramTypes;
+var serviceHandler     = require("common-wrapper").serviceHandler;
 var errors             = require("perror-wrapper");
 
 var Promise            = require('bluebird');
 var _                  = require('lodash');
-
+let BaseRest           = require("common-wrapper").BaseRest;
 var TopicService       = require("../services/Topic.js");
 
-class Topics {
+class Topics extends BaseRest {
 
 	constructor(url_prefix="/api"){
+		super();
 		this.url_prefix = url_prefix;
 	}
 
 	getTopics (req, res) {
-		let TopicServiceInst = TopicService.getInst();
+		let TopicServiceInst = new TopicService(req.context);
 		if(!req.params.tenantId)
 			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("tenantId missing")));
 		serviceHandler(req, res, TopicServiceInst.getAllTopics(req.params.tenantId));
 	}
 
 	createTopic (req, res) {
-		let TopicServiceInst = TopicService.getInst();
+		let TopicServiceInst = new TopicService(req.context);
 		if(!req.params.tenantId || req.params.tenantId!==req.body.tenantId)
 			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("invalid tenantId")));
 		serviceHandler(req, res, TopicServiceInst.createTopic(req.body));

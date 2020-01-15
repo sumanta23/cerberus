@@ -3,7 +3,7 @@ var debug         = require('debug')("TopicService: ");
 var Promise       = require('bluebird');
 var errors        = require("perror-wrapper");
 var _             = require('lodash');
-var BaseService   = require("@sumanta23/server-wrapper").BaseService;
+var BaseService   = require("common-wrapper").BaseService;
 var TenantService = require("../services/Tenant.js");
 
 var Model = appGlobals.dbModels;
@@ -13,7 +13,6 @@ var topicModelName = 'topics';
 class TopicService  extends BaseService {
 	constructor(context) {
 		super(context);
-		this.context = context;
 	}
 
 
