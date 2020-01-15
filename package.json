@@ -1,26 +1,34 @@
 {
-  "name": "wrapper-test",
+  "name": "cerberus",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "api",
+    "validator",
+    "swagger"
+  ],
+  "author": "sumanta23",
+  "license": "MIT",
   "dependencies": {
-    "@elastic/elasticsearch": "^7.4.0",
-    "@sumanta23/server-wrapper": "^1.1.1",
-    "applogger-wrapper": "^1.0.0",
-    "boot-wrapper": "^1.0.1",
-    "config-wrapper": "^1.0.5",
+    "@elastic/elasticsearch": "^7.5.0",
+    "@sumanta23/server-wrapper": "^2.0.4",
+    "applogger-wrapper": "^2.0.6",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.19.0",
+    "boot-wrapper": "^2.0.2",
+    "config-wrapper": "^2.0.3",
     "cors": "^2.8.5",
-    "kafka-node": "^4.1.3",
+    "debug": "^4.1.1",
+    "express": "^4.17.1",
+    "helmet": "^3.21.2",
+    "jaeger-client": "^3.17.1",
+    "kafka-node": "^5.0.0",
+    "lodash": "^4.17.15",
     "mongodbconnection-wrapper": "^1.0.1",
-    "perror-wrapper": "^1.0.1",
-    "rabbitmqconnection-wrapper": "^1.0.0",
-    "redisconnection-wrapper": "^1.0.2",
-    "uuid": "^3.3.2",
-    "ws": "^7.0.1"
+    "redisconnection-wrapper": "^1.0.2"
   }
 }

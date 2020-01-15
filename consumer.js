@@ -1,11 +1,16 @@
-var config = require("config-wrapper");
+const ConfigWrapper = new (require("config-wrapper"))();
+const config = ConfigWrapper.config;
+
+const initTracer = require('jaeger-client').initTracer;
+let tracer=initTracer(config.get("tracer").config, {});
+
 var redisconnection = require("redisconnection-wrapper")(config.get("redis"));
 var sub = require("redisconnection-wrapper")(config.get("redis"));
 
-var boot = require("boot-wrapper");
+var boot = new (require("boot-wrapper"))();
 
-var logger = require("applogger-wrapper");
-logger.init(config.get("logger"));
+const LoggerWrapper = require("applogger-wrapper").LoggerWrapper;
+var logger = new LoggerWrapper(config.get("logger"));
 
 var dbMgr = require('mongodbconnection-wrapper');
 var dbname = process.env.NODE_ENV === 'test' ? "test" : undefined;
@@ -31,7 +36,9 @@ let consumerGroups=[];
 
 boot.init(config)
 .then(async ()=>{
-    await boot.bootlogger(logger);
+    await boot.defineInGlobal("tracer", tracer);
+    await boot.bootlogger(logger, "glogger");
+
     await boot.bootredis(redisconnection);
     await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
         .then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
@@ -39,7 +46,7 @@ boot.init(config)
   var TopicService = require("./services/Topic.js");
   var kafkaClient = require("./kafkaconn/kafkaClient.js");
   var {pushToES} = require("./es/index.js");
-  let TopicServiceInst = TopicService.getInst();
+  let TopicServiceInst = new TopicService();
   TopicServiceInst.getAllTopics().then((allTopics)=>{
     _.map(allTopics,(topic)=>{
       topicname = topic.tenantName+""+topic.name;

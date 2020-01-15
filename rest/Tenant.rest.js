@@ -6,31 +6,38 @@ var _                  = require('lodash');
 
 var TenantService      = require("../services/Tenant.js");
 
-module.exports.getTenants = function(req, res) {
-    let TenantServiceInst = TenantService.getInst();
-	serviceHandler(req, res, TenantServiceInst.getTenants({}));
-};
+class Tenants {
+	constructor(url_prefix="/api"){
+		this.url_prefix = url_prefix;
+	}
 
-module.exports.createTenant = function(req, res) {
-    let TenantServiceInst = TenantService.getInst();
-	serviceHandler(req, res, TenantServiceInst.createTenant(req.body));
-};
+	getTenants(req, res) {
+		let TenantServiceInst = new TenantService(req.context);
+		serviceHandler(req, res, TenantServiceInst.getTenants({}));
+	};
 
-module.exports.url_prefix = "/api" ;
-module.exports.getMappings = function() {
-    return {
-        '/tenant' : {
-            get : {
-                tags: ["Tenant"],
-                summary: "Get all Tenants",
-                callbacks : [this.getTenants]
-            },
-            post :{
-                tags: ["Tenant"],
-                summary: "create Tenants",
-                callbacks : [this.createTenant]
-            }
-        }
-    }
+	createTenant(req, res) {
+		let TenantServiceInst = new TenantService(req.context);
+		serviceHandler(req, res, TenantServiceInst.createTenant(req.body));
+	};
 
-};
+	getMappings () {
+		return {
+			'/tenant' : {
+				get : {
+					tags: ["Tenant"],
+					summary: "Get all Tenants",
+					callbacks : [this.getTenants]
+				},
+				post :{
+					tags: ["Tenant"],
+					summary: "create Tenants",
+					callbacks : [this.createTenant]
+				}
+			}
+		}
+
+	};
+}
+
+module.exports = Tenants

@@ -1,28 +1,30 @@
 'use strict';
 var debug = require('debug')("TenantService: ");
-var Promise     = require('bluebird');
-var _           = require('lodash');
+var Promise = require('bluebird');
+var _ = require('lodash');
+var BaseService = require("@sumanta23/server-wrapper").BaseService;
 
 var Model = appGlobals.dbModels;
 var tenantModelName = 'tenants';
 
+class TenantService extends BaseService {
 
-function TenantService() {
+    constructor(context) {
+        super(context)
+        this.context = context;
+    }
+
+
+    getTenants(q) {
+        this.logger.info("query>>",q)
+        var tDbModels = Model.getModelInstance(tenantModelName);
+        return tDbModels.find(q);
+    }
+
+    createTenant(payload) {
+        var tDbModels = Model.getModelInstance(tenantModelName);
+        return tDbModels.create(payload);
+    }
 }
 
-
-TenantService.prototype.getTenants = function(q) {
-	var tDbModels = Model.getModelInstance(tenantModelName);
-    return tDbModels.find(q);
-};
-
-TenantService.prototype.createTenant = function(payload) {
-	var tDbModels = Model.getModelInstance(tenantModelName);
-    return tDbModels.create(payload);
-};
-
-module.exports = {
-    getInst : function() {
-        return new TenantService();
-    }
-};
+module.exports = TenantService;

@@ -7,35 +7,42 @@ var _                  = require('lodash');
 
 var TopicService       = require("../services/Topic.js");
 
-module.exports.getTopics = function(req, res) {
-    let TopicServiceInst = TopicService.getInst();
-    if(!req.params.tenantId)
-        return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("tenantId missing")));
-	serviceHandler(req, res, TopicServiceInst.getAllTopics(req.params.tenantId));
-};
+class Topics {
 
-module.exports.createTopic = function(req, res) {
-    let TopicServiceInst = TopicService.getInst();
-    if(!req.params.tenantId || req.params.tenantId!==req.body.tenantId)
-        return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("invalid tenantId")));
-	serviceHandler(req, res, TopicServiceInst.createTopic(req.body));
-};
+	constructor(url_prefix="/api"){
+		this.url_prefix = url_prefix;
+	}
 
-module.exports.url_prefix = "/api" ;
-module.exports.getMappings = function() {
-    return {
-        '/:tenantId/topic' : {
-            get : {
-                tags: ["Topic"],
-                summary: "Get all Topics",
-                callbacks : [this.getTopics]
-            },
-            post :{
-                tags: ["Topic"],
-                summary: "create Topics",
-                callbacks : [this.createTopic]
-            }
-        }
-    }
+	getTopics (req, res) {
+		let TopicServiceInst = TopicService.getInst();
+		if(!req.params.tenantId)
+			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("tenantId missing")));
+		serviceHandler(req, res, TopicServiceInst.getAllTopics(req.params.tenantId));
+	};
 
-};
+	createTopic (req, res) {
+		let TopicServiceInst = TopicService.getInst();
+		if(!req.params.tenantId || req.params.tenantId!==req.body.tenantId)
+			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("invalid tenantId")));
+		serviceHandler(req, res, TopicServiceInst.createTopic(req.body));
+	};
+
+	getMappings () {
+		return {
+			'/:tenantId/topic' : {
+				get : {
+					tags: ["Topic"],
+					summary: "Get all Topics",
+					callbacks : [this.getTopics]
+				},
+				post :{
+					tags: ["Topic"],
+					summary: "create Topics",
+					callbacks : [this.createTopic]
+				}
+			}
+		}
+
+	};
+}
+module.exports = Topics
