@@ -18,11 +18,11 @@ var modelPath= "./db/models";
 var schemaPath= "./db/schemas";
 
 sub.subscribe("newtopic", function(err,count) {
-  console.log("count -> ", count);
+	console.log("count -> ", count);
 });
 sub.on('message', function(channel, message){
-  debug("message from redis %s -> %s",channel, message );
-  attachToCG(message);
+	debug("message from redis %s -> %s",channel, message );
+	attachToCG(message);
 });
 
 var kafka = require('kafka-node');
@@ -35,39 +35,39 @@ let consumerGroups=[];
 
 
 boot.init(config)
-.then(async ()=>{
-    await boot.defineInGlobal("tracer", tracer);
-    await boot.bootlogger(logger, "glogger");
+	.then(async ()=>{
+		await boot.defineInGlobal("tracer", tracer);
+		await boot.bootlogger(logger, "glogger");
 
-    await boot.bootredis(redisconnection);
-    await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
-        .then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
-}).then(async ()=>{
-  var TopicService = require("./services/Topic.js");
-  var kafkaClient = require("./kafkaconn/kafkaClient.js");
-  var {pushToES} = require("./es/index.js");
-  let TopicServiceInst = new TopicService();
-  TopicServiceInst.getAllTopics().then((allTopics)=>{
-    _.map(allTopics,(topic)=>{
-      topicname = topic.tenantName+""+topic.name;
-      console.log("attaching consumer for topic", topicname)
-      let cg = kafkaClient.createConsumerGroup(topicname, pushToES);
-      consumerGroups.push(cg);
-    });
-  });
-});
+		await boot.bootredis(redisconnection);
+		await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
+			.then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
+	}).then(async ()=>{
+		var TopicService = require("./services/Topic.js");
+		var kafkaClient = require("./kafkaconn/kafkaClient.js");
+		var {pushToES} = require("./es/index.js");
+		let TopicServiceInst = new TopicService();
+		TopicServiceInst.getAllTopics().then((allTopics)=>{
+			_.map(allTopics,(topic)=>{
+				topicname = topic.tenantName+""+topic.name;
+				console.log("attaching consumer for topic", topicname)
+				let cg = kafkaClient.createConsumerGroup(topicname, pushToES);
+				consumerGroups.push(cg);
+			});
+		});
+	});
 
 function attachToCG(topicName){
-  var kafkaClient = require("./kafkaconn/kafkaClient.js");
-  var {pushToES} = require("./es/index.js");
-  console.log("attaching consumer for topic", topicname)
-  let cg = kafkaClient.createConsumerGroup(topicName, pushToES);
-  consumerGroups.push(cg);
+	var kafkaClient = require("./kafkaconn/kafkaClient.js");
+	var {pushToES} = require("./es/index.js");
+	console.log("attaching consumer for topic", topicname)
+	let cg = kafkaClient.createConsumerGroup(topicName, pushToES);
+	consumerGroups.push(cg);
 }
 
 process.once('SIGINT', function () {
-  async.each(consumerGroups, function (consumer, callback) {
-    return consumer.close(true, callback);
-  });
+	async.each(consumerGroups, function (consumer, callback) {
+		return consumer.close(true, callback);
+	});
 });
 

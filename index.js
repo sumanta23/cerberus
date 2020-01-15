@@ -30,20 +30,20 @@ xssIgnoreList=[]
 baseURL = "localhost:5000"
 
 var pepFunction = ()=>{
-    console.log(arguments);
-    return Promise.resolve(true);
+	console.log(arguments);
+	return Promise.resolve(true);
 }
 
 boot.init(config)
-.then(async ()=>{
-    await boot.defineInGlobal("tracer", tracer);
-    await boot.bootlogger(logger, "glogger");
-    await boot.bootredis(redisconnection);
-    await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
-        .then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
-}).then(async ()=>{
-	var api = new APIServer(app, 5000, { restPath, schemaPath: validationSchema, validationRequired, apidocRequired, basicSecRequired, xssIgnoreList, baseURL, apiPrefix:"", PEPRequired:true, pepFunction:pepFunction, tracing:true, instrumenatation: tracer })
-    api.init()
-    api.loadapi();
-    api.start();
-})
+	.then(async ()=>{
+		await boot.defineInGlobal("tracer", tracer);
+		await boot.bootlogger(logger, "glogger");
+		await boot.bootredis(redisconnection);
+		await dbMgr.initialize(config.get("db"), { dbname, modelPath, schemaPath })
+			.then((mInst)=>boot.bootdb(mInst, dbMgr.getModel()));
+	}).then(async ()=>{
+		var api = new APIServer(app, 5000, { restPath, schemaPath: validationSchema, validationRequired, apidocRequired, basicSecRequired, xssIgnoreList, baseURL, apiPrefix:"", PEPRequired:true, pepFunction:pepFunction, tracing:true, instrumenatation: tracer })
+		api.init()
+		api.loadapi();
+		api.start();
+	})
