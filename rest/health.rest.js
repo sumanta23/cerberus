@@ -10,14 +10,14 @@ var Logger             = require("applogger-wrapper").Logger;
 class Health extends BaseRest {
 
 	constructor(url_prefix="/api"){
-		super()
+		super();
 		this.url_prefix = url_prefix;
 	}
 
 
 	getHealth(req, res) {
 		this.logger.info("jeeeee");
-		var healthP = Promise.resolve({'status':'OK'})
+		var healthP = Promise.resolve({'status':'OK'});
 		serviceHandler(req, res, healthP);
 	}
 
@@ -30,9 +30,9 @@ class Health extends BaseRest {
 					callbacks : [this.getHealth],
 				}
 			}
-		}
+		};
 
-	};
+	}
 }
 
 module.exports = Health;

@@ -18,14 +18,14 @@ class Topics {
 		if(!req.params.tenantId)
 			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("tenantId missing")));
 		serviceHandler(req, res, TopicServiceInst.getAllTopics(req.params.tenantId));
-	};
+	}
 
 	createTopic (req, res) {
 		let TopicServiceInst = TopicService.getInst();
 		if(!req.params.tenantId || req.params.tenantId!==req.body.tenantId)
 			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("invalid tenantId")));
 		serviceHandler(req, res, TopicServiceInst.createTopic(req.body));
-	};
+	}
 
 	getMappings () {
 		return {
@@ -41,8 +41,8 @@ class Topics {
 					callbacks : [this.createTopic]
 				}
 			}
-		}
+		};
 
-	};
+	}
 }
-module.exports = Topics
+module.exports = Topics;

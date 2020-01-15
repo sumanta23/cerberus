@@ -6,12 +6,12 @@ let errors             = require("perror-wrapper");
 let Promise            = require('bluebird');
 let _                  = require('lodash');
 
-let MessageService     = require("../services/Messages.js")
+let MessageService     = require("../services/Messages.js");
 
 class Messages extends BaseRest {
 
 	constructor(url_prefix="/api"){
-		super()
+		super();
 		this.url_prefix = url_prefix;
 	}
 
@@ -22,7 +22,7 @@ class Messages extends BaseRest {
 		if(!req.params.topicId)
 			return serviceHandler(req, res, new Promise.reject(new errors.BadRequest("topicId not found")));
 		serviceHandler(req, res, MessageServiceInst.consumeMessage(req.params.topicId, req.body));
-	};
+	}
 
 	getMappings() {
 		return {
@@ -36,10 +36,10 @@ class Messages extends BaseRest {
 					]
 				}
 			}
-		}
+		};
 
-	};
+	}
 
 }
 
-module.exports = Messages
+module.exports = Messages;

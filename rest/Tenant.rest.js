@@ -14,12 +14,12 @@ class Tenants {
 	getTenants(req, res) {
 		let TenantServiceInst = new TenantService(req.context);
 		serviceHandler(req, res, TenantServiceInst.getTenants({}));
-	};
+	}
 
 	createTenant(req, res) {
 		let TenantServiceInst = new TenantService(req.context);
 		serviceHandler(req, res, TenantServiceInst.createTenant(req.body));
-	};
+	}
 
 	getMappings () {
 		return {
@@ -35,9 +35,9 @@ class Tenants {
 					callbacks : [this.createTenant]
 				}
 			}
-		}
+		};
 
-	};
+	}
 }
 
-module.exports = Tenants
+module.exports = Tenants;
